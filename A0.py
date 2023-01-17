@@ -2,7 +2,7 @@ import json
 import os
 import re
 
-DATALOC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
+DATALOC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
 def recurse_dir_search(filetarget: str, current_directory: str = DATALOC) -> str:
@@ -29,15 +29,14 @@ def recurse_dir_search(filetarget: str, current_directory: str = DATALOC) -> str
 if __name__ == "__main__":
     userdata = {}
 
-    datachanged = false
+    datachanged = False
 
     try:
         fpath = recurse_dir_search("userdata.json")
-        with open(fpath, "r") as f:
-            userdata = json.load(f)
+        with open(fpath, "rb") as f:
+            userdata = json.loads(f.read().decode())
     except FileNotFoundError:
-        with open(os.path.join(DATALOC, "userdata.json"), "x") as f:
-            f.write("{}")
+        userdata = {}
 
     firstname = input("Please enter your first name: ")
     lastname = input("Please enter your last name: ")
@@ -57,14 +56,14 @@ if __name__ == "__main__":
         )
     else:
         print("Please input your top 5 favorite movies in descending order.")
-        userdata[f"{firstname}{lastname}"]["movies"] = []
+        userdata[f"{firstname}{lastname}"] = {"movies": []}
         for i in range(5):
             moviedata = {
                 "title": "",
                 "director": "",
-                "releaseyear": "",
-                "imdbrating": -1,
-                "tomatoesrating": -1,
+                "releaseyear": None,
+                "imdbrating": None,
+                "tomatoesrating": None,
                 "mpaarating": "",
             }
 
@@ -77,29 +76,34 @@ if __name__ == "__main__":
                     )
                 except ValueError:
                     print("Please enter a valid year.")
-            while not moviedata["IMDBrating"]:
+            while not moviedata["imdbrating"]:
                 try:
                     rating = int(input(f"Movie #{i+1} IMDB Rating: "))
-                    if rating < 0 or rating >= 5:
+                    if rating < 0 or rating > 5:
                         raise ValueError
-                    moviedata["IMDBrating"] = rating
+                    moviedata["imdbrating"] = rating
                 except ValueError:
                     print("Please enter a valid rating.")
             while not moviedata["tomatoesrating"]:
                 try:
                     rating = int(input(f"Movie #{i+1} Tomatoes Rating: "))
-                    if rating < 0 or rating >= 5:
+                    if rating < 0 or rating > 5:
                         raise ValueError
                     moviedata["tomatoesrating"] = rating
                 except ValueError:
                     print("Please enter a valid rating.")
-            moviedata["MPAARating"] = input(
-                f"Movie #{i+1} MPAA Rating (eg: (PG, PG-13, R, etc.): "
+            moviedata["mpaarating"] = input(
+                f"Movie #{i+1} MPAA Rating (eg: PG, PG-13, R, etc.): "
             )
 
             userdata[f"{firstname}{lastname}"]["movies"].append(moviedata)
             datachanged = True
 
     if datachanged:
-        with open(fpath, "w") as f:
-            json.dump(userdata, f, indent=4)
+        try:
+            fpath = recurse_dir_search("userdata.json")
+            with open(fpath, "wb") as f:
+                f.write(json.dumps(userdata, indent=4).encode())
+        except FileNotFoundError:
+            with open(os.path.join(DATALOC, "userdata.json"), "wb") as f:
+                f.write(json.dumps(userdata, indent=4).encode())
