@@ -11,14 +11,14 @@ def recurse_dir_search(filetarget: str, current_directory: str = DATALOC) -> str
 
     Reused from my other projects.
     """
-    validext = re.compile(r"\.[a-zA-Z]{2,4}$")
+    validextension = re.compile(r"\.[a-zA-Z]{2,4}$")
     path = current_directory
     dirlist = os.listdir(path)
     for filename in dirlist:
         if filename == filetarget:
             path = os.path.join(current_directory, filetarget)
             return path
-        elif not validext.search(filename):
+        elif not validextension.search(filename):
             try:
                 return recurse_dir_search(filetarget, os.path.join(path, filename))
             except FileNotFoundError:
